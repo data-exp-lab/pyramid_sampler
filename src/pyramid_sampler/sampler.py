@@ -1,12 +1,16 @@
 import numpy as np
 import zarr
-from dask import array as da, delayed, compute
+from dask import delayed, compute
 import numba
 import numpy.typing as npt
 
 
 @numba.jit
-def coarsen(output_shape, level_coarse, level_fine, refine_factor, covered_vals, offset):
+def _coarsen(output_shape: tuple[int,int,int],
+             level_coarse: int,
+             level_fine: int,
+             refine_factor: tuple[int,int,int],
+             covered_vals: npt.NDArray):
     d_level = level_coarse - level_fine
 
     lev0_Npixels_0 = refine_factor[0] ** d_level
@@ -57,7 +61,7 @@ class Downsampler:
     def get_fine_ijk(self,
                      ijk_coarse: npt.ArrayLike,
                      level_coarse: int,
-                     level_fine:int,) -> npt.ndarray[npt.int64]:
+                     level_fine:int,) -> npt.NDArray[np.int64]:
 
         ijk_coarse = np.as_array(ijk_coarse).astype(int)
         d_level = level_coarse - level_fine
@@ -66,12 +70,13 @@ class Downsampler:
 
     def get_level_shape(self,
                         level_coarse: int,
-                        ) -> npt.ndarray[npt.int64]:
+                        ) -> npt.NDArray[np.int64]:
         d_level = level_coarse - 0
         return self.finest_resolution // self.refine_factor**d_level
 
 
-    def get_global_start_index(self, chunk_linear_index):
+    def get_global_start_index(self, chunk_linear_index) -> tuple[npt.NDArray[np.int64],
+                                                                  npt.NDArray[np.int64]]:
         chunks = self.chunks
         n_chunks_by_dim = [len(ch) for ch in chunks]
         chunk_index = np.unravel_index(chunk_linear_index, n_chunks_by_dim)
@@ -89,7 +94,7 @@ class Downsampler:
         ei = np.array(ei, dtype=int)
         return si, ei
 
-    def get_level_nchunks(self, level_shape: npt.ArrayLike) -> npt.ndarray[npt.int64]:
+    def get_level_nchunks(self, level_shape: npt.ArrayLike) -> npt.NDArray[np.int64]:
         level_shape = np.as_array(level_shape).astype(int)
         return np.array(level_shape) // np.array(self.chunks)
 
@@ -135,22 +140,31 @@ def _write_chunk_values(downsampler: Downsampler,
                        ichunk: int,
                        level: int,
                        fine_level: int,
-                       zarr_field:str):
+                       zarr_field:str) -> int:
 
     refine_factor = downsampler.refine_factor
-    chunks = downsampler.chunks
     zarr_file = downsampler.zarr_store_path
 
-    si, ei = downsampler.get_global_start_index(ichunk, chunks)
+    si, ei = downsampler.get_global_start_index(ichunk)
+    chunksize = ei - si
 
-    # read in the level 0 range covered by this chunk
-    si0 = downsampler.get_fine_ijk(si, level, 0, refine_factor)
-    ei0 = downsampler.get_fine_ijk(ei, level, 0, refine_factor)
+    # read in the index range of the fine level covered by this chunk
+    si0 = downsampler.get_fine_ijk(si, level, fine_level)
+    ei0 = downsampler.get_fine_ijk(ei, level, fine_level)
 
+    # actually read in the covered values. this assumes we can hold
+    # at least prod(refine_factor) * chunksize in memory, e.g.,
+    # for refinement factor of (2,2,2) and chunksize of (64,64,64), the
+    # covered array will have size of 8 * 64**3 = 2_097_152
     fine_zarr = zarr.open(zarr_file)[zarr_field][str(fine_level)]
     covered_vals = fine_zarr[si0[0]:ei0[0], si0[1]:ei0[1], si0[2]:ei0[2]]
 
-    outvals = coarsen(tuple(ei - si), level, fine_level, tuple(refine_factor), covered_vals, tuple(si))
+    outvals = _coarsen(tuple(chunksize),
+                       level,
+                       fine_level,
+                       tuple(refine_factor),
+                       covered_vals,
+                       )
 
     coarse_zarr = zarr.open(zarr_file)[zarr_field][str(level)]
     coarse_zarr[si[0]:ei[0], si[1]:ei[1]:, si[2]:ei[2]] = outvals
