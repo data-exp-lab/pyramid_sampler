@@ -157,3 +157,6 @@ Thumbs.db
 *~
 *.swp
 .idea
+.zarr
+*.zarr
+

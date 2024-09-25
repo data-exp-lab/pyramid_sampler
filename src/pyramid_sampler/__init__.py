@@ -7,5 +7,6 @@ pyramid_sampler: simple tools for creating image pyramids
 from __future__ import annotations
 
 from ._version import version as __version__
+from .sampler import initialize_test_image, Downsampler
 
 __all__ = ["__version__"]
