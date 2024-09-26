@@ -121,13 +121,12 @@ class Downsampler:
     def _downsample_by_one_level(
         self,
         coarse_level: int,
-        zarr_file: str,
         zarr_field: str,
     ) -> None:
         level = coarse_level
         fine_level = level - 1
         lev_shape = self._get_level_shape(level)
-        field1 = zarr.open(zarr_file)[zarr_field]
+        field1 = zarr.open(self.zarr_store_path)[zarr_field]
         field1.empty(level, shape=lev_shape, chunks=self.chunks)
 
         numchunks = field1[str(level)].nchunks
@@ -145,7 +144,6 @@ class Downsampler:
     def downsample(
         self,
         max_levels: int,
-        zarr_file: str,
         zarr_field: str,
     ) -> None:
         if max_levels <= 0:
@@ -161,7 +159,7 @@ class Downsampler:
                 )
                 break
             print(f"downsampling to level {level}.")
-            self._downsample_by_one_level(level, zarr_file, zarr_field)
+            self._downsample_by_one_level(level, zarr_field)
 
 
 def _write_chunk_values(
