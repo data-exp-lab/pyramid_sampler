@@ -7,6 +7,8 @@ import zarr
 from dask import array as da
 from dask import compute, delayed
 
+from ._logging import sampler_log
+
 
 @numba.jit  # type: ignore[misc]
 def _coarsen(
@@ -154,11 +156,11 @@ class Downsampler:
             lev_shape = self._get_level_shape(level)
             nchunks_by_dim = self._get_level_nchunks(lev_shape)
             if np.any(nchunks_by_dim == 0):
-                print(
-                    f"cannot subdivide further, stopping downsampling at level {level-1}."
-                )
+                msg = f"cannot subdivide further, stopping downsampling at level {level-1}."
+                sampler_log.info(msg)
                 break
-            print(f"downsampling to level {level}.")
+            msg = f"downsampling to level {level}."
+            sampler_log.info(msg)
             self._downsample_by_one_level(level, zarr_field)
 
 

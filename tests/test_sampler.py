@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import zarr
 
 from pyramid_sampler.sampler import Downsampler, initialize_test_image
@@ -39,3 +40,6 @@ def test_downsampler(tmp_path):
     expected_max_lev = 2
     for lev in range(expected_max_lev + 1):
         assert lev in zarr_store[fieldname]
+
+    with pytest.raises(ValueError, match="max_level must exceed 0"):
+        dsr.downsample(0, fieldname)
