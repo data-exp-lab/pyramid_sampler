@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pytest
 import zarr
 
@@ -43,3 +44,8 @@ def test_downsampler(tmp_path):
 
     with pytest.raises(ValueError, match="max_level must exceed 0"):
         dsr.downsample(0, fieldname)
+
+
+def test_downsampler_defaults():
+    dsr = Downsampler("not_a_file.zarr", (2, 2, 2), (128, 128, 128))
+    assert np.all(dsr.chunks == (64, 64, 64))
