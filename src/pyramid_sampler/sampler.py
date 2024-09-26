@@ -20,22 +20,22 @@ def _coarsen(
 ) -> npt.NDArray[np.float64]:
     d_level = level_coarse - level_fine
 
-    lev0_Npixels_0 = refine_factor[0] ** d_level
-    lev0_Npixels_1 = refine_factor[1] ** d_level
-    lev0_Npixels_2 = refine_factor[2] ** d_level
+    lev0_npixels_0 = refine_factor[0] ** d_level
+    lev0_npixels_1 = refine_factor[1] ** d_level
+    lev0_npixels_2 = refine_factor[2] ** d_level
 
     output_array = np.zeros(output_shape, dtype=np.float64)
 
     for i0_coarse in range(output_shape[0]):
         i0_fine_0 = i0_coarse * refine_factor[0] ** d_level
-        i0_fine_1 = i0_fine_0 + lev0_Npixels_0
+        i0_fine_1 = i0_fine_0 + lev0_npixels_0
 
         for i1_coarse in range(output_shape[1]):
             i1_fine_0 = i1_coarse * refine_factor[1] ** d_level
-            i1_fine_1 = i1_fine_0 + lev0_Npixels_1
+            i1_fine_1 = i1_fine_0 + lev0_npixels_1
             for i2_coarse in range(output_shape[2]):
                 i2_fine_0 = i2_coarse * refine_factor[2] ** d_level
-                i2_fine_1 = i2_fine_0 + lev0_Npixels_2
+                i2_fine_1 = i2_fine_0 + lev0_npixels_2
                 val = 0.0
                 nvals = 0.0
                 for i0 in range(i0_fine_0, i0_fine_1):
@@ -50,6 +50,10 @@ def _coarsen(
 
 
 class Downsampler:
+    """
+    A class for downsampling a pre-existing 3D zarr array.
+    """
+
     def __init__(
         self,
         zarr_store_path: str,
