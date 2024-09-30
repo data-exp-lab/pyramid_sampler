@@ -88,3 +88,24 @@ using `numba.jit` compilation for the pixel-averaging.
 At present, this package is a small utility used for experimentations with zarr
 files. But contributions are welcome! Open up an issue at
 https://github.com/data-exp-lab/pyramid_sampler/issues to discuss ideas.
+
+### cutting a new release
+
+Notes for maintainers on cutting a new release:
+
+1. create and push a new tag
+
+```commandline
+git tag v0.1.0
+git push upstream v0.1.0
+```
+
+2. create new a release on github via the release interface, using the tag you
+   just pushed.
+3. on publishing the new github release, a github action
+   `.github/workflows/cd.yml` runs. This action builds the distribution and
+   pushes to pypi.
+
+Note that the publication to pypi in step 3 uses a
+[Trusted Publisher](https://docs.pypi.org/trusted-publishers/) configured by
+@chris.havlin
