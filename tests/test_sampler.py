@@ -27,13 +27,16 @@ def test_initialize_test_image(tmp_path):
     assert zarr_store[fieldname][0].shape == res
 
 
-def test_downsampler(tmp_path):
+@pytest.mark.parametrize("dtype", ["float32", np.float64, "int", np.int32, np.int16])
+def test_downsampler(tmp_path, dtype):
     tmp_zrr = str(tmp_path / "myzarr.zarr")
     zarr_store = zarr.open(tmp_zrr)
     res = (32, 32, 32)
     chunks = (8, 8, 8)
     fieldname = "test_field"
-    initialize_test_image(zarr_store, fieldname, res, chunks, overwrite_field=False)
+    initialize_test_image(
+        zarr_store, fieldname, res, chunks, overwrite_field=False, dtype=dtype
+    )
 
     dsr = Downsampler(tmp_zrr, (2, 2, 2), res, chunks)
 
@@ -41,6 +44,7 @@ def test_downsampler(tmp_path):
     expected_max_lev = 2
     for lev in range(expected_max_lev + 1):
         assert lev in zarr_store[fieldname]
+        assert zarr_store[fieldname][lev].dtype == np.dtype(dtype)
 
     with pytest.raises(ValueError, match="max_level must exceed 0"):
         dsr.downsample(0, fieldname)

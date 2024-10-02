@@ -132,8 +132,10 @@ class Downsampler:
         level = coarse_level
         fine_level = level - 1
         lev_shape = self._get_level_shape(level)
+
         field1 = zarr.open(self.zarr_store_path)[zarr_field]
-        field1.empty(level, shape=lev_shape, chunks=self.chunks)
+        dtype = field1[fine_level].dtype
+        field1.empty(level, shape=lev_shape, chunks=self.chunks, dtype=dtype)
 
         numchunks = field1[str(level)].nchunks
 
@@ -197,7 +199,8 @@ def _write_chunk_values(
     )
 
     coarse_zarr = zarr.open(zarr_file)[zarr_field][str(level)]
-    coarse_zarr[si[0] : ei[0], si[1] : ei[1] :, si[2] : ei[2]] = outvals
+    dtype = coarse_zarr.dtype
+    coarse_zarr[si[0] : ei[0], si[1] : ei[1] :, si[2] : ei[2]] = outvals.astype(dtype)
 
     return 1
 
@@ -208,15 +211,27 @@ def initialize_test_image(
     base_resolution: tuple[int, int, int],
     chunks: int | tuple[int, int, int] | None = None,
     overwrite_field: bool = True,
+    dtype: str | type | None = None,
 ) -> None:
+    if dtype is None:
+        dtype = np.float64
     field1 = zarr_store.create_group(zarr_field, overwrite=overwrite_field)
 
     if chunks is None:
         chunks = (64, 64, 64)
-    lev0 = da.random.random(base_resolution, chunks=chunks)
+    fac: int | float
+    if np.issubdtype(dtype, np.integer):
+        fac = 100
+    elif np.issubdtype(dtype, np.floating):
+        fac = 1.0
+    else:
+        msg = f"Unexpected dtype of {dtype}"
+        raise RuntimeError(msg)
+    lev0 = fac * da.random.random(base_resolution, chunks=chunks)
+    lev0 = lev0.astype(dtype)
     halfway = np.asarray(base_resolution) // 2
     lev0[0 : halfway[0], 0 : halfway[1], 0 : halfway[2]] = (
-        lev0[0 : halfway[0], 0 : halfway[1], 0 : halfway[2]] + 0.5
+        lev0[0 : halfway[0], 0 : halfway[1], 0 : halfway[2]] + 0.5 * fac
     )
-    field1.empty(0, shape=base_resolution, chunks=chunks)
+    field1.empty(0, shape=base_resolution, chunks=chunks, dtype=dtype)
     da.to_zarr(lev0, field1["0"])
