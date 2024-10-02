@@ -52,6 +52,18 @@ def _coarsen(
 class Downsampler:
     """
     A class for downsampling a pre-existing 3D zarr array.
+
+    Parameters
+    ----------
+    zarr_store_path:
+        will be passed to zarr.open(zarr_store_path)
+     refine_factor:
+        refinement factor in each dimension, e.g., (2,2,2)
+    level_0_res:
+        resolution of the base array to be downsampled
+    chunks:
+        chunk size of the base array to be downsampled. The
+        same chunk size will be used for all levels.
     """
 
     def __init__(
@@ -154,6 +166,25 @@ class Downsampler:
         max_levels: int,
         zarr_field: str,
     ) -> None:
+        """
+        Downsample a 3D zarr array.
+
+        Will proceed until max_levels is reached or until the array can
+        no longer be subdivided (the array is a single chunk).
+
+        Parameters
+        ----------
+        max_levels:
+            maximum levels to allow
+        zarr_field:
+            the field to downsample. Assumes the base level 0 array exists
+            at zarr_store[zarr_field][0].
+
+        Returns
+        -------
+        None
+            results written to the zarr store.
+        """
         if max_levels <= 0:
             msg = f"max_level must exceed 0, found {max_levels}"
             raise ValueError(msg)
@@ -213,6 +244,30 @@ def initialize_test_image(
     overwrite_field: bool = True,
     dtype: str | type | None = None,
 ) -> None:
+    """
+    create a 3D base level 0 array in an active zarr store.
+
+    Array values will be random + an offset in the lower quadrant
+    of the array. For float dtypes, random values are in range 0,1 with
+    an offset of 0.5 while for int dtypes, values or in 0, 100 with offset of
+    50.
+
+    Parameters
+    ----------
+    zarr_store:
+        the open zarr store
+    zarr_field:
+        the field to create. Array will be stored at zarr_store[zarr_field][0]
+    base_resolution:
+        the resolution of the array
+    chunks:
+        the chunk sizes for the array along each dimension. If a single value,
+        will use the same for all dimensions. Defaults to (64,64,64).
+    overwrite_field:
+        if True (default False), will overwrite existing field.
+    dtype:
+        the dtype to use, defaults to float64.
+    """
     if dtype is None:
         dtype = np.float64
     field1 = zarr_store.create_group(zarr_field, overwrite=overwrite_field)

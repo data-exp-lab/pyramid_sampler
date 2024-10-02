@@ -54,7 +54,7 @@ To run the downsampling,
 ```python
 field_to_downsample = "field1"
 max_levels = 10
-ds.downsample(max_levels, zarr_file, field_to_downsample)
+ds.downsample(max_levels, field_to_downsample)
 ```
 
 Downsampling will only proceed until a layer is created with a single chunk of
