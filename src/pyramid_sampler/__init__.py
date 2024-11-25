@@ -9,4 +9,4 @@ from __future__ import annotations
 from ._version import version as __version__
 from .sampler import Downsampler, initialize_test_image
 
-__all__ = ["__version__", "Downsampler", "initialize_test_image"]
+__all__ = ["Downsampler", "__version__", "initialize_test_image"]
