@@ -193,7 +193,7 @@ class Downsampler:
             lev_shape = self._get_level_shape(level)
             nchunks_by_dim = self._get_level_nchunks(lev_shape)
             if np.any(nchunks_by_dim == 0):
-                msg = f"cannot subdivide further, stopping downsampling at level {level-1}."
+                msg = f"cannot subdivide further, stopping downsampling at level {level - 1}."
                 sampler_log.info(msg)
                 break
             msg = f"downsampling to level {level}."
