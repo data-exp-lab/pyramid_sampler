@@ -290,5 +290,5 @@ def initialize_test_image(
     lev0[0 : halfway[0], 0 : halfway[1], 0 : halfway[2]] = (
         lev0[0 : halfway[0], 0 : halfway[1], 0 : halfway[2]] + 0.5 * fac
     )
-    field1.empty(name='0', shape=base_resolution, chunks=chunks, dtype=dtype)
+    field1.empty(name="0", shape=base_resolution, chunks=chunks, dtype=dtype)
     da.to_zarr(lev0, field1["0"])

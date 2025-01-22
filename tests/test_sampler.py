@@ -18,13 +18,13 @@ def test_initialize_test_image(tmp_path):
     initialize_test_image(zarr_store, fieldname, res, chunks, overwrite_field=False)
 
     assert fieldname in zarr_store
-    assert zarr_store[fieldname]['0'].shape == res
-    assert zarr_store[fieldname]['0'].chunks == chunks
+    assert zarr_store[fieldname]["0"].shape == res
+    assert zarr_store[fieldname]["0"].chunks == chunks
     assert Path.exists(tmp_path / "myzarr.zarr" / fieldname)
 
     res = (16, 16, 16)
     initialize_test_image(zarr_store, fieldname, res, chunks, overwrite_field=True)
-    assert zarr_store[fieldname]['0'].shape == res
+    assert zarr_store[fieldname]["0"].shape == res
 
 
 @pytest.mark.parametrize("dtype", ["float32", np.float64, "int", np.int32, np.int16])
