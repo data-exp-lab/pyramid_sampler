@@ -142,14 +142,16 @@ class Downsampler:
         zarr_field: str,
     ) -> None:
         level = coarse_level
+        level_str = str(level)
         fine_level = level - 1
-        lev_shape = self._get_level_shape(level)
+        fine_lev_str = str(fine_level)
+        lev_shape = self._get_level_shape(level).tolist()
 
         field1 = zarr.open(self.zarr_store_path)[zarr_field]
-        dtype = field1[fine_level].dtype
-        field1.empty(level, shape=lev_shape, chunks=self.chunks, dtype=dtype)
+        dtype = field1[fine_lev_str].dtype
+        field1.empty(name=level_str, shape=lev_shape, chunks=self.chunks, dtype=dtype)
 
-        numchunks = field1[str(level)].nchunks
+        numchunks = field1[level_str].nchunks
 
         chunk_writes = []
         for ichunk in range(numchunks):
@@ -270,7 +272,7 @@ def initialize_test_image(
     """
     if dtype is None:
         dtype = np.float64
-    field1 = zarr_store.create_group(zarr_field, overwrite=overwrite_field)
+    field1 = zarr_store.create_group(name=zarr_field, overwrite=overwrite_field)
 
     if chunks is None:
         chunks = (64, 64, 64)
@@ -288,5 +290,5 @@ def initialize_test_image(
     lev0[0 : halfway[0], 0 : halfway[1], 0 : halfway[2]] = (
         lev0[0 : halfway[0], 0 : halfway[1], 0 : halfway[2]] + 0.5 * fac
     )
-    field1.empty(0, shape=base_resolution, chunks=chunks, dtype=dtype)
+    field1.empty(name="0", shape=base_resolution, chunks=chunks, dtype=dtype)
     da.to_zarr(lev0, field1["0"])
