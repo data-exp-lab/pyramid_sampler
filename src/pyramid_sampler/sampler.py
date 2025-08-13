@@ -149,7 +149,7 @@ class Downsampler:
 
         field1 = zarr.open(self.zarr_store_path)[zarr_field]
         dtype = field1[fine_lev_str].dtype
-        field1.empty(name=level_str, shape=lev_shape, chunks=self.chunks, dtype=dtype)
+        field1.empty(name=level_str, shape=lev_shape, chunks=self.chunks.tolist(), dtype=dtype)
 
         numchunks = field1[level_str].nchunks
 
