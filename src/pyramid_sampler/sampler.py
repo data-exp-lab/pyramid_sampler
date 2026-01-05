@@ -10,7 +10,7 @@ from dask import compute, delayed
 from ._logging import sampler_log
 
 
-@numba.jit  # type: ignore[misc]
+@numba.jit  # type: ignore[untyped-decorator]
 def _coarsen(
     output_shape: tuple[int, int, int],
     level_coarse: int,
